@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
+from __future__ import print_function
 from nyaan import Parser as nyaanParser, Item
 import os, sys
 
@@ -14,17 +15,17 @@ if __name__ == "__main__":
         f = open(numfile, 'r')
     except IOError as e:
         if e.errno == 2:
-            print('Create file %s and add latest episode number to it' % numfile)
+            print('Create file %s and add latest episode number to it' % numfile, file=sys.stderr)
             sys.exit(1)
         else:
-            print(e)
+	    print('Error: %s' % e, file=sys.stderr)
             sys.exit(1)
     num = f.readline()
     f.close()
     try:
         num = int(num)
     except:
-        print('File %s does not contain number' % numfile)
+        print('File %s does not contain number' % numfile, file=sys.stderr)
         sys.exit(1)
     a = Parser('Fairy Tail Horrible subs %s 1080p' % num)
     a.deduplicate()

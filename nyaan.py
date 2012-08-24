@@ -4,6 +4,9 @@
 import requests
 import re
 import string
+import logging
+
+logging.basicConfig(level=logging.ERROR)
 
 try:
     from bs4 import BeautifulSoup
@@ -23,6 +26,7 @@ LEECHERS = 0.3
 class Item(object):
     def __init__(self, item):
         self.item = item
+        self.log = logging.getLogger('Item')
         self.guid = None
         self.resolution = None
         self.link = None
@@ -47,20 +51,20 @@ class Item(object):
     def parse_item(self):
         try:
             self.link = self.item.link['href']
-            self.title = self.item.title.text
+            self.title = self.item.title.string
         except Exception as e:
-            print('Multifail %s' % e)
+            self.log.error('Multifail %s' % e)
             return
         try:
-            self.category = self.item.category.text
+            self.category = self.item.category.string
         except:
             pass
         try:
-            self.description = self.item.description.text
+            self.description = self.item.description.string
         except:
             pass
         try:
-            self.date = parse(self.item.date.text)
+            self.date = parse(self.item.date.string)
         except:
             pass
         return True
@@ -68,7 +72,7 @@ class Item(object):
     def parse_resolution(self):
         match = re.search('\[(\d+p)\]', self.title)
         if match:
-            self.resolution = match.group(1)
+	    self.resolution = match.group(1)
 
     def parse_name(self):
         self.name = re.sub('\s*\[(\w|\s)+\]\s*', ' ',self.title)
@@ -84,7 +88,7 @@ class Item(object):
         if self.link and self.name:
             return True
         else:
-            print('Unvalid')
+            self.log.error('Unvalid')
             return False
 
     def parse_descrption(self):
@@ -97,8 +101,7 @@ class Item(object):
                     try:
                         self.bytes = int(float(match.group('gigabytes')[:-4]) * 1024 * 1024 * 1024)
                     except Exception as e:
-                        print(self.description)
-                        print(e)
+			self.log.exception(e)
                         pass
                 self.leechers = match.group('leechers')
                 self.seeders = match.group('seeders')
@@ -136,6 +139,7 @@ class Item(object):
 
 class Parser(object):
     def __init__(self, search):
+        self.log = logging.getLogger('Parser')
         self.objects = []
         self.search = search
         self.feedURL = None
@@ -150,14 +154,13 @@ class Parser(object):
         xml = requests.get(self.feedURL)
         ## replaces because soup fails to parse link tags
         soup = BeautifulSoup(xml.text.replace('<link>','<link href="').replace('</link>', '" />'),convertEntities=BeautifulSoup.ALL_ENTITIES)
-        #print("%s" % soup)
         for item in soup.findAll('item'):
             try:
                 i = Item(item)
                 if i.valid():
                     self.objects.append(i)
             except Exception as e:
-                print(e)
+		self.log.exception(e)
 
     def present(self):
         print(u"{:_^60s}|{:_^6s}|{:_^6s}|{:_^13s}|{:_^10s}|{:_^45s}".format('Name', 'S', 'L', 'Size', 'Resolution', 'Link'))
