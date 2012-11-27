@@ -72,7 +72,7 @@ class Item(object):
     def parse_resolution(self):
         match = re.search('\[(\d+p)\]', self.title)
         if match:
-	    self.resolution = match.group(1)
+            self.resolution = match.group(1)
 
     def parse_name(self):
         self.name = re.sub('\s*\[(\w|\s)+\]\s*', ' ',self.title)
@@ -163,13 +163,13 @@ class Parser(object):
 		self.log.exception(e)
 
     def present(self):
-        print(u"{:_^60s}|{:_^6s}|{:_^6s}|{:_^13s}|{:_^10s}|{:_^45s}".format('Name', 'S', 'L', 'Size', 'Resolution', 'Link'))
+        print(u"{0:_^60s}|{1:_^6s}|{2:_^6s}|{3:_^13s}|{4:_^10s}|{5:_^45s}".format('Name', 'S', 'L', 'Size', 'Resolution', 'Link'))
         for item in self.by_name():
             if item.resolution:
                 resol = item.resolution
             else:
                 resol = ''
-            print(u"{:<60s}|{:>5s} |{:>5s} | {:<7.1f} MiB | {:>8s} | {:>45s}".format(item.name, item.seeders, item.leechers, float(item.bytes)/1024/1024, resol, item.link))
+            print(u"{0:<60s}|{1:>5s} |{2:>5s} | {3:<7.1f} MiB | {4:>8s} | {5:>45s}".format(item.name, item.seeders, item.leechers, float(item.bytes)/1024/1024, resol, item.link))
 
     def by_episodes(self):
         return sorted(self.objects, key=lambda item: item.episode)
