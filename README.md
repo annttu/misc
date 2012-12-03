@@ -25,3 +25,7 @@ Download speed tester
 drop_privs.py
 =============
 Python example of dropping privileges on execute.
+
+dmesgtime
+=========
+Show dmesg timestamps in humanreadable format
