@@ -1,0 +1,18 @@
+#!/usr/bin/perl
+use strict;
+use POSIX 'strftime';
+
+# Show dmesg timestamps in human readable format
+# Author: Annttu
+#
+
+open(HANDLE, "/bin/dmesg|") || die "No dmesg";
+print HANDLE;
+while (<HANDLE>) {
+    #print $_;
+    my ($uptime) = (do { local @ARGV='/proc/uptime';<>} =~ /^(\d+)\./);
+    $_ =~/^\[\s*(\d+)\.\d+\](.+)/; 
+    my $datestring = strftime("%x %H:%M:%S", localtime(time - $uptime + $1));
+    printf "[%s]%s\n", $datestring, $2;
+}
+close(HANDLE);
