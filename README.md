@@ -14,9 +14,9 @@ Antti 'annttu' Jaakkola
 
 annttu(a)annttu.fi.not_valid
 
-nyaan.py
+nyaa/
 ========
-Nyaa.eu anime fetcher.
+Automated anime fetcher.
 
 speedtest.sh
 ============

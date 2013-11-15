@@ -31,6 +31,7 @@ class Item(object):
         self.resolution = None
         self.link = None
         self.title = None
+        self.orginal_title = None
         self.category = None
         self.bytes = 0
         self.leechers = None
@@ -42,7 +43,7 @@ class Item(object):
         self.description = None
         self.points = 0
         if self.parse_item():
-            self.parse_descrption()
+            self.parse_description()
             self.parse_resolution()
             self.parse_name()
             self.parse_episode()
@@ -52,15 +53,16 @@ class Item(object):
         try:
             self.link = self.item.link['href']
             self.title = self.item.title.string
+            self.orginal_title = unicode(self.item.title.string)
         except Exception as e:
             self.log.error('Multifail %s' % e)
             return
         try:
-            self.category = self.item.category.string
+            self.category = unicode(self.item.category.string)
         except:
             pass
         try:
-            self.description = self.item.description.string
+            self.description = unicode(self.item.description.string)
         except:
             pass
         try:
@@ -91,7 +93,7 @@ class Item(object):
             self.log.error('Unvalid')
             return False
 
-    def parse_descrption(self):
+    def parse_description(self):
         if type(self.description) == type(u'') or type(self.description) == type(''):
             match = description_re.search(self.description)
             if match != None:
@@ -101,7 +103,7 @@ class Item(object):
                     try:
                         self.bytes = int(float(match.group('gigabytes')[:-4]) * 1024 * 1024 * 1024)
                     except Exception as e:
-			self.log.exception(e)
+                        self.log.exception(e)
                         pass
                 self.leechers = match.group('leechers')
                 self.seeders = match.group('seeders')
@@ -160,16 +162,16 @@ class Parser(object):
                 if i.valid():
                     self.objects.append(i)
             except Exception as e:
-		self.log.exception(e)
+                self.log.exception(e)
 
     def present(self):
-        print(u"{0:_^60s}|{1:_^6s}|{2:_^6s}|{3:_^13s}|{4:_^10s}|{5:_^45s}".format('Name', 'S', 'L', 'Size', 'Resolution', 'Link'))
+        print(u"{0:_^30s}|{1:_^6s}|{2:_^6s}|{3:_^13s}|{4:_^10s}|{5:_^45s}".format('Name', 'S', 'L', 'Size', 'Resolution', 'Link'))
         for item in self.by_name():
             if item.resolution:
                 resol = item.resolution
             else:
                 resol = ''
-            print(u"{0:<60s}|{1:>5s} |{2:>5s} | {3:<7.1f} MiB | {4:>8s} | {5:>45s}".format(item.name, item.seeders, item.leechers, float(item.bytes)/1024/1024, resol, item.link))
+            print(u"{0:<30s}|{1:>5s} |{2:>5s} | {3:<7.1f} MiB | {4:>8s} | {5:>45s}".format(item.name, item.seeders, item.leechers, float(item.bytes)/1024/1024, resol, item.link))
 
     def by_episodes(self):
         return sorted(self.objects, key=lambda item: item.episode)
@@ -191,13 +193,35 @@ class Parser(object):
             c = sorted(o[group], key=lambda item: item.points)
             self.objects.append(c[-1])
 
+    def strict(self):
+        """
+        Strict search, to get episodes with number 10 and resolution 1080p
+        nyaa.eu search suck!
+        """
+        words = self.search.split()
+        remove = []
+        for i in range(len(self.objects)):
+            item = self.objects[i]
+            res = u''
+            if item.resolution:
+                res = item.resolution
+            for word in words:
+                if re.search('^\d+$', word.lower()):
+                    word = u' %s ' % word.lower()
+                if word.lower() not in item.orginal_title.lower():
+                    remove.append(i)
+        remove.sort()
+        remove.reverse()
+        for r in remove:
+            self.objects.pop(r)
 
 
 if __name__ == "__main__":
     import sys
-    search = 'Fairy Tail Horrible subs'
+    search = 'Fairy Tail'
     if len(sys.argv) > 1:
         search = ' '.join(sys.argv[1:])
     a = Parser(search)
+    a.strict()
     a.deduplicate()
     a.present()
